@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button"
 export default async function HomePage() {
   const session = await auth()
 
-  if (session) {
-    redirect("/dashboard")
-  }
+  // 暂时直接重定向到dashboard，不检查登录状态
+  redirect("/dashboard")
+  
+  // if (session) {
+  //   redirect("/dashboard")
+  // }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">

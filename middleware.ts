@@ -14,10 +14,10 @@ export default auth((req: NextRequest & { auth?: any }) => {
     return NextResponse.redirect(new URL("/dashboard", req.url))
   }
 
-  // 保护 /dashboard 路由
-  if (pathname.startsWith("/dashboard") && !isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url))
-  }
+  // 保护 /dashboard 路由 - 暂时禁用
+  // if (pathname.startsWith("/dashboard") && !isLoggedIn) {
+  //   return NextResponse.redirect(new URL("/login", req.url))
+  // }
 
   return NextResponse.next()
 })
