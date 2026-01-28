@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 export type PieceType = "I" | "O" | "T" | "S" | "Z" | "J" | "L"
 export type GameStatus = "idle" | "playing" | "paused" | "gameover"
 
@@ -171,11 +173,22 @@ const BOARD_WIDTH = 10
 const BOARD_HEIGHT = 20
 
 export function TetrisBoard({ board, currentPiece, gameStatus }: TetrisBoardProps) {
-  // 计算单元格大小（响应式）
-  const cellSize = Math.min(
-    Math.floor((typeof window !== "undefined" ? window.innerWidth : 1024) / BOARD_WIDTH / 1.2),
-    32
-  )
+  const [cellSize, setCellSize] = useState(24)
+
+  // 计算单元格大小（响应式，支持旋转/resize）
+  useEffect(() => {
+    const updateCellSize = () => {
+      const w = window.innerWidth
+      // 留出边距/侧栏，移动端更保守
+      const max = w < 640 ? 26 : 32
+      const size = Math.floor((w * 0.92) / BOARD_WIDTH)
+      setCellSize(Math.max(14, Math.min(size, max)))
+    }
+
+    updateCellSize()
+    window.addEventListener("resize", updateCellSize)
+    return () => window.removeEventListener("resize", updateCellSize)
+  }, [])
 
   // 获取当前方块的形状
   const getPieceShape = (piece: CurrentPiece): number[][] => {
@@ -217,7 +230,7 @@ export function TetrisBoard({ board, currentPiece, gameStatus }: TetrisBoardProp
 
   return (
     <div className="flex justify-center">
-      <div className="rounded-lg border-4 border-gray-600 bg-gray-900 p-2 shadow-lg">
+      <div className="rounded-lg border-4 border-gray-600 bg-gray-900 p-2 shadow-lg touch-none select-none">
         <div
           className="grid gap-0"
           style={{

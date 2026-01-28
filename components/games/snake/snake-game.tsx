@@ -39,11 +39,20 @@ export function SnakeGame({ userId }: SnakeGameProps) {
   const [direction, setDirection] = useState<Direction>("right")
   const [nextDirection, setNextDirection] = useState<Direction>("right")
   const [score, setScore] = useState(0)
-  const [length, setLength] = useState(1)
   const [highScore, setHighScore] = useState<number | null>(null)
   const moveIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const moveSnakeRef = useRef<(() => void) | null>(null)
   const directionRef = useRef<Direction>("right")
   const foodRef = useRef<Position | null>(null)
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null)
+  const snakeRef = useRef<Position[]>([])
+  
+  // 计算当前长度（避免每次渲染都计算）
+  const currentLength = snake.length > 0 ? snake.length : 1
+
+  useEffect(() => {
+    snakeRef.current = snake
+  }, [snake])
 
   const config = DIFFICULTY_CONFIG[difficulty]
 
@@ -83,79 +92,74 @@ export function SnakeGame({ userId }: SnakeGameProps) {
     return body.slice(1).some((segment) => segment.x === head.x && segment.y === head.y)
   }, [])
 
-  // 移动蛇
+  // 移动蛇（用 ref 作为真值，避免状态竞争导致“增长回滚”）
   const moveSnake = useCallback(() => {
     if (gameStatus !== "playing") return
 
-    setSnake((prevSnake) => {
-      if (prevSnake.length === 0) return prevSnake
+    const prevSnake = snakeRef.current
+    if (!prevSnake || prevSnake.length === 0) return
 
-      const currentDirection = directionRef.current
-      const head = prevSnake[0]
-      const currentFood = foodRef.current
+    const currentDirection = directionRef.current
+    const head = prevSnake[0]
+    const currentFood = foodRef.current
 
-      // 计算新头部位置
-      let newHead: Position
-      switch (currentDirection) {
-        case "up":
-          newHead = { x: head.x, y: head.y - 1 }
-          break
-        case "down":
-          newHead = { x: head.x, y: head.y + 1 }
-          break
-        case "left":
-          newHead = { x: head.x - 1, y: head.y }
-          break
-        case "right":
-          newHead = { x: head.x + 1, y: head.y }
-          break
+    // 计算新头部位置
+    let newHead: Position
+    switch (currentDirection) {
+      case "up":
+        newHead = { x: head.x, y: head.y - 1 }
+        break
+      case "down":
+        newHead = { x: head.x, y: head.y + 1 }
+        break
+      case "left":
+        newHead = { x: head.x - 1, y: head.y }
+        break
+      case "right":
+        newHead = { x: head.x + 1, y: head.y }
+        break
+    }
+
+    // 检查碰撞
+    if (checkCollision(newHead, prevSnake)) {
+      setGameStatus("gameover")
+      if (moveIntervalRef.current) {
+        clearInterval(moveIntervalRef.current)
+        moveIntervalRef.current = null
       }
 
-      // 检查碰撞
-      if (checkCollision(newHead, prevSnake)) {
-        // 游戏结束
-        setGameStatus("gameover")
-        if (moveIntervalRef.current) {
-          clearInterval(moveIntervalRef.current)
-          moveIntervalRef.current = null
-        }
-
-        // 保存记录
-        const currentLength = prevSnake.length
-        const currentScore = currentLength * config.scoreMultiplier
-        if (isNewHighScore("snake", difficulty, currentScore)) {
-          saveGameRecord({
-            gameType: "snake",
-            difficulty,
-            score: currentScore,
-            length: currentLength,
-            timestamp: Date.now(),
-          })
-        }
-
-        setScore(currentScore)
-        setLength(currentLength)
-        return prevSnake
+      const finalLen = prevSnake.length
+      const finalScore = finalLen * config.scoreMultiplier
+      if (isNewHighScore("snake", difficulty, finalScore)) {
+        saveGameRecord({
+          gameType: "snake",
+          difficulty,
+          score: finalScore,
+          length: finalLen,
+          timestamp: Date.now(),
+        })
       }
+      setScore(finalScore)
+      return
+    }
 
-      // 检查是否吃到食物
-      const ateFood = currentFood && newHead.x === currentFood.x && newHead.y === currentFood.y
+    // 检查是否吃到食物
+    const ateFood = currentFood && newHead.x === currentFood.x && newHead.y === currentFood.y
 
-      if (ateFood) {
-        // 吃到食物，增长
-        const newSnake = [newHead, ...prevSnake]
-        const newFood = generateFood(newSnake)
-        foodRef.current = newFood
-        setFood(newFood)
-        setLength(newSnake.length)
-        setScore(newSnake.length * config.scoreMultiplier)
-        return newSnake
-      } else {
-        // 没吃到食物，正常移动（移除尾部）
-        const newSnake = [newHead, ...prevSnake.slice(0, -1)]
-        return newSnake
-      }
-    })
+    if (ateFood) {
+      const nextSnake = [newHead, ...prevSnake] // 增长：不裁尾巴
+      const nextFood = generateFood(nextSnake)
+      snakeRef.current = nextSnake
+      foodRef.current = nextFood
+      setSnake(nextSnake)
+      setFood(nextFood)
+      setScore(nextSnake.length * config.scoreMultiplier)
+      return
+    }
+
+    const nextSnake = [newHead, ...prevSnake.slice(0, -1)]
+    snakeRef.current = nextSnake
+    setSnake(nextSnake)
   }, [gameStatus, checkCollision, generateFood, config.scoreMultiplier, difficulty])
 
   // 改变方向
@@ -215,21 +219,58 @@ export function SnakeGame({ userId }: SnakeGameProps) {
     return () => window.removeEventListener("keydown", handleKeyPress)
   }, [gameStatus, changeDirection])
 
-  // 自动移动
-  useEffect(() => {
-    if (gameStatus === "playing" && snake.length > 0) {
-      moveIntervalRef.current = setInterval(() => {
-        moveSnake()
-      }, config.moveSpeed)
+  // 触摸滑动换向（移动端）
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    const t = e.touches[0]
+    touchStartRef.current = { x: t.clientX, y: t.clientY }
+  }, [])
 
-      return () => {
-        if (moveIntervalRef.current) {
-          clearInterval(moveIntervalRef.current)
-          moveIntervalRef.current = null
-        }
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      const start = touchStartRef.current
+      if (!start) return
+      const t = e.changedTouches[0]
+      const dx = t.clientX - start.x
+      const dy = t.clientY - start.y
+
+      // 阈值避免误触
+      const absX = Math.abs(dx)
+      const absY = Math.abs(dy)
+      if (Math.max(absX, absY) < 18) return
+
+      if (absX > absY) {
+        changeDirection(dx > 0 ? "right" : "left")
+      } else {
+        changeDirection(dy > 0 ? "down" : "up")
+      }
+      touchStartRef.current = null
+    },
+    [changeDirection]
+  )
+
+  // 自动移动：避免依赖 snake 导致每一帧重建 interval（会带来状态竞争，尤其在“吃到增长”时）
+  useEffect(() => {
+    moveSnakeRef.current = moveSnake
+  }, [moveSnake])
+
+  useEffect(() => {
+    if (gameStatus === "playing") {
+      if (moveIntervalRef.current) {
+        clearInterval(moveIntervalRef.current)
+        moveIntervalRef.current = null
+      }
+      moveIntervalRef.current = setInterval(() => {
+        moveSnakeRef.current?.()
+      }, config.moveSpeed)
+    }
+
+    return () => {
+      if (moveIntervalRef.current) {
+        clearInterval(moveIntervalRef.current)
+        moveIntervalRef.current = null
       }
     }
-  }, [gameStatus, snake, config.moveSpeed, moveSnake])
+  }, [gameStatus, config.moveSpeed])
 
   // 初始化游戏
   const initGame = useCallback(() => {
@@ -239,13 +280,13 @@ export function SnakeGame({ userId }: SnakeGameProps) {
     const initialFood = generateFood(initialSnake)
 
     setSnake(initialSnake)
+    snakeRef.current = initialSnake
     setFood(initialFood)
     foodRef.current = initialFood
     setDirection("right")
     directionRef.current = "right"
     setNextDirection("right")
     setScore(0)
-    setLength(1)
     setGameStatus("idle")
 
     // 加载最高分
@@ -265,6 +306,7 @@ export function SnakeGame({ userId }: SnakeGameProps) {
     const initialFood = generateFood(initialSnake)
 
     setSnake(initialSnake)
+    snakeRef.current = initialSnake
     setFood(initialFood)
     foodRef.current = initialFood
     setDirection("right")
@@ -353,7 +395,7 @@ export function SnakeGame({ userId }: SnakeGameProps) {
           </div>
           <div className="flex flex-col space-y-1">
             <span className="text-xs text-gray-600 sm:text-sm">长度</span>
-            <span className="text-base font-mono font-bold sm:text-lg">{length.toString().padStart(3, "0")}</span>
+            <span className="text-base font-mono font-bold sm:text-lg">{currentLength.toString().padStart(3, "0")}</span>
           </div>
           {highScore !== null && (
             <div className="flex flex-col space-y-1">
@@ -370,7 +412,7 @@ export function SnakeGame({ userId }: SnakeGameProps) {
       {gameStatus === "gameover" && (
         <div className="rounded-md bg-red-50 p-3 text-center sm:p-4">
           <p className="text-base font-semibold text-red-800 sm:text-lg">
-            游戏结束！分数: {score} | 长度: {length}
+            游戏结束！分数: {score} | 长度: {currentLength}
           </p>
         </div>
       )}
@@ -382,11 +424,53 @@ export function SnakeGame({ userId }: SnakeGameProps) {
 
       {/* 游戏区域 */}
       <div className="flex flex-col items-center space-y-4">
-        <SnakeBoard snake={snake} food={food} gameStatus={gameStatus} />
+        <div
+          className="touch-none"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
+          <SnakeBoard snake={snake} food={food} gameStatus={gameStatus} />
+        </div>
         <div className="text-center">
           <p className="text-xs text-gray-500 sm:text-sm">
             控制：方向键移动 | P 暂停
           </p>
+        </div>
+
+        {/* 移动端方向按钮兜底 */}
+        <div className="sm:hidden">
+          <div className="grid grid-cols-3 gap-2">
+            <div />
+            <button
+              type="button"
+              className="rounded-md border bg-white px-4 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+              onClick={() => changeDirection("up")}
+            >
+              ↑
+            </button>
+            <div />
+            <button
+              type="button"
+              className="rounded-md border bg-white px-4 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+              onClick={() => changeDirection("left")}
+            >
+              ←
+            </button>
+            <button
+              type="button"
+              className="rounded-md border bg-white px-4 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+              onClick={() => changeDirection("down")}
+            >
+              ↓
+            </button>
+            <button
+              type="button"
+              className="rounded-md border bg-white px-4 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+              onClick={() => changeDirection("right")}
+            >
+              →
+            </button>
+          </div>
         </div>
       </div>
     </div>

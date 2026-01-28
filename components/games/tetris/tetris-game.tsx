@@ -171,6 +171,9 @@ export function TetrisGame({ userId }: TetrisGameProps) {
   const [lines, setLines] = useState(0)
   const [highScore, setHighScore] = useState<number | null>(null)
   const fallIntervalRef = useRef<NodeJS.Timeout | null>(null)
+  const moveDownRef = useRef<(() => void) | null>(null)
+  const downHoldTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const downHoldTriggeredRef = useRef(false)
 
   const config = DIFFICULTY_CONFIG[difficulty]
 
@@ -297,7 +300,6 @@ export function TetrisGame({ userId }: TetrisGameProps) {
       const { newBoard: clearedBoard, clearedLines } = clearLines(newBoard)
 
       setBoard(clearedBoard)
-
       setLines((prevLines) => {
         const newLines = prevLines + clearedLines
         setScore((prevScore) => {
@@ -337,7 +339,7 @@ export function TetrisGame({ userId }: TetrisGameProps) {
 
   // 方块下落
   const moveDown = useCallback(() => {
-    if (!currentPiece || gameStatus !== "playing") return
+    if (gameStatus !== "playing") return
 
     setCurrentPiece((prev) => {
       if (!prev) return prev
@@ -352,13 +354,13 @@ export function TetrisGame({ userId }: TetrisGameProps) {
 
       return newPiece
     })
-  }, [currentPiece, board, gameStatus, checkCollision, handlePiecePlaced])
+  }, [gameStatus, checkCollision, handlePiecePlaced, board])
 
 
   // 移动方块（左/右）
   const movePiece = useCallback(
     (dx: number) => {
-      if (!currentPiece || gameStatus !== "playing") return
+      if (gameStatus !== "playing") return
 
       setCurrentPiece((prev) => {
         if (!prev) return prev
@@ -372,12 +374,12 @@ export function TetrisGame({ userId }: TetrisGameProps) {
         return prev
       })
     },
-    [currentPiece, board, gameStatus, checkCollision]
+    [gameStatus, checkCollision, board]
   )
 
   // 旋转方块
   const rotatePiece = useCallback(() => {
-    if (!currentPiece || gameStatus !== "playing") return
+    if (gameStatus !== "playing") return
 
     setCurrentPiece((prev) => {
       if (!prev) return prev
@@ -404,11 +406,11 @@ export function TetrisGame({ userId }: TetrisGameProps) {
 
       return prev
     })
-  }, [currentPiece, board, gameStatus, checkCollision])
+  }, [gameStatus, checkCollision, board])
 
   // 快速下落
   const hardDrop = useCallback(() => {
-    if (!currentPiece || gameStatus !== "playing") return
+    if (gameStatus !== "playing") return
 
     setCurrentPiece((prev) => {
       if (!prev) return prev
@@ -422,7 +424,38 @@ export function TetrisGame({ userId }: TetrisGameProps) {
       handlePiecePlaced(newPiece, board)
       return null
     })
-  }, [currentPiece, board, gameStatus, checkCollision, handlePiecePlaced])
+  }, [gameStatus, checkCollision, handlePiecePlaced, board])
+
+  // 移动端：↓ 长按落到底，短按下移一格
+  const handleDownPressStart = useCallback(() => {
+    if (gameStatus !== "playing") return
+
+    downHoldTriggeredRef.current = false
+    if (downHoldTimerRef.current) clearTimeout(downHoldTimerRef.current)
+
+    downHoldTimerRef.current = setTimeout(() => {
+      downHoldTriggeredRef.current = true
+      hardDrop()
+    }, 260)
+  }, [gameStatus, hardDrop])
+
+  const handleDownPressEnd = useCallback(() => {
+    if (downHoldTimerRef.current) {
+      clearTimeout(downHoldTimerRef.current)
+      downHoldTimerRef.current = null
+    }
+    if (gameStatus !== "playing") return
+    // 若未触发长按，则当作短按：下移一格
+    if (!downHoldTriggeredRef.current) {
+      moveDown()
+    }
+  }, [gameStatus, moveDown])
+
+  useEffect(() => {
+    return () => {
+      if (downHoldTimerRef.current) clearTimeout(downHoldTimerRef.current)
+    }
+  }, [])
 
   // 键盘事件处理
   useEffect(() => {
@@ -447,6 +480,10 @@ export function TetrisGame({ userId }: TetrisGameProps) {
           e.preventDefault()
           if (gameStatus === "playing") rotatePiece()
           break
+        case "Enter":
+          e.preventDefault()
+          if (gameStatus === "playing") hardDrop()
+          break
         case "p":
         case "P":
           e.preventDefault()
@@ -457,23 +494,27 @@ export function TetrisGame({ userId }: TetrisGameProps) {
 
     window.addEventListener("keydown", handleKeyPress)
     return () => window.removeEventListener("keydown", handleKeyPress)
-  }, [gameStatus, movePiece, moveDown, rotatePiece])
+  }, [gameStatus, movePiece, moveDown, rotatePiece, hardDrop])
 
   // 自动下落
   useEffect(() => {
-    if (gameStatus === "playing" && currentPiece) {
-      fallIntervalRef.current = setInterval(() => {
-        moveDown()
-      }, config.fallSpeed)
+    moveDownRef.current = moveDown
+  }, [moveDown])
 
-      return () => {
-        if (fallIntervalRef.current) {
-          clearInterval(fallIntervalRef.current)
-          fallIntervalRef.current = null
-        }
+  useEffect(() => {
+    if (gameStatus === "playing") {
+      fallIntervalRef.current = setInterval(() => {
+        moveDownRef.current?.()
+      }, config.fallSpeed)
+    }
+
+    return () => {
+      if (fallIntervalRef.current) {
+        clearInterval(fallIntervalRef.current)
+        fallIntervalRef.current = null
       }
     }
-  }, [gameStatus, currentPiece, config.fallSpeed, moveDown])
+  }, [gameStatus, config.fallSpeed])
 
   // 初始化游戏
   const initGame = useCallback(() => {
@@ -611,6 +652,54 @@ export function TetrisGame({ userId }: TetrisGameProps) {
           <div className="mt-4 text-center">
             <p className="text-xs text-gray-500 sm:text-sm">
               控制：← → 移动 | ↑ 或 空格 旋转 | ↓ 加速 | P 暂停
+            </p>
+          </div>
+
+          {/* 移动端虚拟按键 */}
+          <div className="mt-4 sm:hidden">
+            <div className="grid grid-cols-3 gap-2">
+              <div />
+              <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+                onClick={() => rotatePiece()}
+                disabled={gameStatus !== "playing"}
+              >
+                ↑
+              </button>
+              <div />
+
+              <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+                onClick={() => movePiece(-1)}
+                disabled={gameStatus !== "playing"}
+              >
+                ←
+              </button>
+              <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+                onMouseDown={handleDownPressStart}
+                onMouseUp={handleDownPressEnd}
+                onMouseLeave={handleDownPressEnd}
+                onTouchStart={handleDownPressStart}
+                onTouchEnd={handleDownPressEnd}
+                disabled={gameStatus !== "playing"}
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                className="rounded-md border bg-white px-3 py-3 text-sm font-semibold text-gray-800 active:bg-gray-100"
+                onClick={() => movePiece(1)}
+                disabled={gameStatus !== "playing"}
+              >
+                →
+              </button>
+            </div>
+            <p className="mt-2 text-center text-xs text-gray-500">
+              提示：短按 ↓ 下移一格，长按 ↓ 落到底
             </p>
           </div>
         </div>

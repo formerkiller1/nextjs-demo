@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+
 export type GameStatus = "idle" | "playing" | "paused" | "gameover"
 
 export interface Position {
@@ -16,11 +18,21 @@ interface SnakeBoardProps {
 const BOARD_SIZE = 20
 
 export function SnakeBoard({ snake, food, gameStatus }: SnakeBoardProps) {
-  // 计算单元格大小（响应式）
-  const cellSize = Math.min(
-    Math.floor((typeof window !== "undefined" ? window.innerWidth : 1024) / BOARD_SIZE / 1.5),
-    28
-  )
+  const [cellSize, setCellSize] = useState(18)
+
+  // 计算单元格大小（响应式，支持旋转/resize）
+  useEffect(() => {
+    const updateCellSize = () => {
+      const w = window.innerWidth
+      const max = w < 640 ? 18 : 28
+      const size = Math.floor((w * 0.92) / BOARD_SIZE)
+      setCellSize(Math.max(10, Math.min(size, max)))
+    }
+
+    updateCellSize()
+    window.addEventListener("resize", updateCellSize)
+    return () => window.removeEventListener("resize", updateCellSize)
+  }, [])
 
   // 创建游戏板
   const board = Array(BOARD_SIZE)
@@ -42,7 +54,7 @@ export function SnakeBoard({ snake, food, gameStatus }: SnakeBoardProps) {
 
   return (
     <div className="flex justify-center">
-      <div className="rounded-lg border-4 border-gray-600 bg-gray-900 p-2 shadow-lg">
+      <div className="rounded-lg border-4 border-gray-600 bg-gray-900 p-2 shadow-lg touch-none select-none">
         <div
           className="grid gap-0"
           style={{

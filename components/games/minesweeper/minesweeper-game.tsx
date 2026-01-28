@@ -135,32 +135,35 @@ export function MinesweeperGame({ userId }: MinesweeperGameProps) {
 
           newRevealed[r][c] = true
 
-          // 如果当前格子是0，继续展开周围
-          if (board[r] && board[r][c] === 0) {
-            for (let dr = -1; dr <= 1; dr++) {
-              for (let dc = -1; dc <= 1; dc++) {
-                if (dr === 0 && dc === 0) continue
-                const nr = r + dr
-                const nc = c + dc
-                if (
-                  nr >= 0 &&
-                  nr < config.rows &&
-                  nc >= 0 &&
-                  nc < config.cols &&
-                  !newRevealed[nr][nc] &&
-                  !flagged[nr][nc]
-                ) {
-                  queue.push([nr, nc])
+          // 如果当前格子是0，继续展开周围（使用函数式更新获取最新 board）
+          setBoard((currentBoard) => {
+            if (currentBoard[r] && currentBoard[r][c] === 0) {
+              for (let dr = -1; dr <= 1; dr++) {
+                for (let dc = -1; dc <= 1; dc++) {
+                  if (dr === 0 && dc === 0) continue
+                  const nr = r + dr
+                  const nc = c + dc
+                  if (
+                    nr >= 0 &&
+                    nr < config.rows &&
+                    nc >= 0 &&
+                    nc < config.cols &&
+                    !newRevealed[nr][nc] &&
+                    !flagged[nr][nc]
+                  ) {
+                    queue.push([nr, nc])
+                  }
                 }
               }
             }
-          }
+            return currentBoard
+          })
         }
 
         return newRevealed
       })
     },
-    [config, flagged, board]
+    [config, flagged]
   )
 
   // 处理格子点击
@@ -181,16 +184,11 @@ export function MinesweeperGame({ userId }: MinesweeperGameProps) {
           return newRevealed
         })
         // 如果点击的是空白区域，需要展开
-        // 使用setTimeout确保board状态已更新
         if (newBoard[row][col] === 0) {
-          setTimeout(() => {
-            setBoard((currentBoard) => {
-              if (currentBoard[row] && currentBoard[row][col] === 0) {
-                revealEmpty(row, col)
-              }
-              return currentBoard
-            })
-          }, 0)
+          // 使用 requestAnimationFrame 确保 board 状态已更新
+          requestAnimationFrame(() => {
+            revealEmpty(row, col)
+          })
         }
         return
       }
@@ -221,18 +219,7 @@ export function MinesweeperGame({ userId }: MinesweeperGameProps) {
         })
       }
     },
-    [
-      gameStatus,
-      revealed,
-      flagged,
-      firstClick,
-      mines,
-      board,
-      config,
-      difficulty,
-      time,
-      revealEmpty,
-    ]
+    [gameStatus, revealed, flagged, firstClick, mines, revealEmpty]
   )
 
   // 处理右键标记
@@ -244,13 +231,13 @@ export function MinesweeperGame({ userId }: MinesweeperGameProps) {
 
       setFlagged((prev) => {
         const newFlagged = prev.map((r) => [...r])
-        newFlagged[row][col] = !newFlagged[row][col]
+        const wasFlagged = newFlagged[row][col]
+        newFlagged[row][col] = !wasFlagged
+        
+        // 同步更新剩余地雷数
+        setMinesLeft((prevMines) => (wasFlagged ? prevMines + 1 : prevMines - 1))
+        
         return newFlagged
-      })
-
-      setMinesLeft((prev) => {
-        const wasFlagged = flagged[row][col]
-        return wasFlagged ? prev + 1 : prev - 1
       })
     },
     [gameStatus, revealed, flagged]
