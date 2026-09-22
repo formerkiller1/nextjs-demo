@@ -16,7 +16,7 @@ export default async function DashboardPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         <div className="rounded-lg bg-white px-8 py-8 shadow">
           <div className="mb-6 flex items-center justify-between">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard2</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard3</h1>
             {session && <LogoutButton />}
           </div>
 
