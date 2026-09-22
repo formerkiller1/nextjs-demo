@@ -1,3 +1,5 @@
+cat /srv/nextjs-app/Dockerfile
+# syntax=docker/dockerfile:1
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -13,11 +15,15 @@ COPY package.json package-lock.json ./
 COPY prisma ./prisma
 
 # 安装所有依赖（包括 devDependencies，构建需要 TypeScript 等工具）
-RUN npm ci
+# 使用 BuildKit cache mount 缓存 npm 下载的包，避免重复下载
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci
 
 # 复制剩余源码并构建
 COPY . .
-RUN npm run build
+# 使用 BuildKit cache mount 缓存 .next 构建产物，加速增量构建
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
 
 FROM node:20-alpine AS runner
 
@@ -46,5 +52,3 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 EXPOSE 3000
 
 CMD ["npm", "run", "start"]
-
-

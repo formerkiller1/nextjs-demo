@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Providers from "@/components/providers/session-provider";
 import { validateEnv } from "@/lib/env";
+import { resumeData } from "@/lib/resume-data";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Next.js 认证系统",
-  description: "完整的全栈认证解决方案",
+  title: `${resumeData.profile.name} · ${resumeData.profile.title}`,
+  description: resumeData.profile.tagline,
 };
 
 // 在开发环境验证环境变量
