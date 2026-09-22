@@ -1,4 +1,3 @@
-cat /srv/nextjs-app/Dockerfile
 # syntax=docker/dockerfile:1
 FROM node:20-alpine AS builder
 
