@@ -132,4 +132,5 @@ export const authConfig: NextAuthConfig = {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   secret: env.NEXTAUTH_SECRET || undefined,
+  trustHost: true, // 信任代理服务器（Nginx）传递的主机头
 })

@@ -1,0 +1,14 @@
+# 数据库配置（必需，用于数据存储）
+DATABASE_URL="postgres://2efc4b9c95fc2a303f35653f83dfff75b28186940002b47cd7a78d2d8b159083:sk_54I9HqYWNka9dEilAkzBD@db.prisma.io:5432/postgres?sslmode=require"
+
+# NextAuth 配置
+NEXTAUTH_URL="https://nextjs-demo-indol-seven.vercel.app"
+NEXTAUTH_SECRET="LfeWC3zG1La11q98qHmii5AjFEzt6S1KMloOa2ugR5s="
+
+# QQ邮箱SMTP配置（可选）
+SMTP_HOST="smtp.qq.com"
+SMTP_PORT=587
+SMTP_USER="2273997883@qq.com"
+SMTP_PASSWORD="bnwpxmbdeqbnecgb"
+SMTP_FROM="2273997883@qq.com"
+SMTP_FROM_NAME="Next.js App"

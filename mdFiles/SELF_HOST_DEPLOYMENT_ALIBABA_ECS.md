@@ -120,7 +120,10 @@ sudo mkdir -p /srv /data/postgres
 sudo chown -R $USER:$USER /srv /data/postgres
 
 cd /srv
-git clone <你的仓库地址> nextjs-app
+# git clone <你的仓库地址> nextjs-app
+# 使用国内代理
+git clone https://gitclone.com/github.com/formerkiller1/nextjs-demo.git nextjs-app
+
 cd nextjs-app
 ```
 
@@ -264,23 +267,26 @@ sudo certbot certonly --standalone -d dctcoder.xyz
 
 后续会将 `/etc/letsencrypt` 挂载到 Nginx 容器中使用。
 
-### 7.2 Nginx 配置思路
+### 7.2 Nginx 配置实现
 
-在项目根目录新增 `nginx/default.conf`，大致包含：
+#### 7.2.1 创建 Nginx 配置目录和文件
 
-- 一个 `server` 块监听 `80`：
-  - 用于 HTTP → HTTPS 重定向。
-- 一个 `server` 块监听 `443`：
-  - 加载 Let’s Encrypt 证书。
-  - `proxy_pass http://web:3000;`
-  - 传递真实 IP、Host 等头部。
+在项目根目录创建 `nginx` 目录和配置文件：
 
-示例配置逻辑（示意）：
+```bash
+# 进入项目目录
+cd /srv/nextjs-app
 
-```nginx
+# 创建 nginx 目录
+mkdir -p nginx
+
+# 创建配置文件
+cat > nginx/default.conf << 'EOF'
 server {
   listen 80;
   server_name dctcoder.xyz;
+
+  # 所有 HTTP 请求统一跳转到 HTTPS
   return 301 https://$host$request_uri;
 }
 
@@ -288,20 +294,44 @@ server {
   listen 443 ssl;
   server_name dctcoder.xyz;
 
+  # Let's Encrypt 证书路径（来自宿主机 /etc/letsencrypt 挂载）
   ssl_certificate     /etc/letsencrypt/live/dctcoder.xyz/fullchain.pem;
   ssl_certificate_key /etc/letsencrypt/live/dctcoder.xyz/privkey.pem;
 
+  ssl_protocols       TLSv1.2 TLSv1.3;
+  ssl_ciphers         HIGH:!aNULL:!MD5;
+
+  # 基本安全头（可按需调整或扩展）
+  add_header X-Frame-Options DENY;
+  add_header X-Content-Type-Options nosniff;
+
   location / {
     proxy_pass http://web:3000;
+
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto $scheme;
   }
 }
+EOF
 ```
 
----
+#### 7.2.3 配置说明
+
+- **HTTP → HTTPS 重定向**：
+  - `server` 块监听 `80` 端口，所有 HTTP 请求统一返回 301 重定向到 HTTPS。
+- **HTTPS 反向代理**：
+  - `server` 块监听 `443` 端口，加载 Let's Encrypt 证书。
+  - 使用 `proxy_pass http://web:3000` 将请求转发到 Next.js 应用容器。
+  - 设置必要的代理头（`Host`、`X-Real-IP`、`X-Forwarded-For`、`X-Forwarded-Proto`），确保 NextAuth 等组件能正确获取客户端信息。
+- **SSL 安全配置**：
+  - 仅支持 TLSv1.2 和 TLSv1.3。
+  - 添加基本安全响应头。
 
 ## 8. 部署步骤（首发上线流程）
 
