@@ -1,10 +1,14 @@
 import { Navbar } from "@/components/site/navbar"
 import { Footer } from "@/components/site/footer"
 import { Hero } from "@/components/site/sections/hero"
-import { About } from "@/components/site/sections/about"
-import { Skills } from "@/components/site/sections/skills"
-import { Experience } from "@/components/site/sections/experience"
+import { Services } from "@/components/site/sections/services"
 import { ProjectsPreview } from "@/components/site/sections/projects-preview"
+import { Process } from "@/components/site/sections/process"
+import { Testimonials } from "@/components/site/sections/testimonials"
+import { Skills } from "@/components/site/sections/skills"
+import { About } from "@/components/site/sections/about"
+import { Experience } from "@/components/site/sections/experience"
+import { FAQ } from "@/components/site/sections/faq"
 import { Contact } from "@/components/site/sections/contact"
 
 export default function HomePage() {
@@ -13,10 +17,14 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero />
-        <About />
-        <Skills />
-        <Experience />
         <ProjectsPreview />
+        <Services />
+        <Process />
+        <Testimonials />
+        <Skills />
+        <About />
+        <Experience />
+        <FAQ />
         <Contact />
       </main>
       <Footer />

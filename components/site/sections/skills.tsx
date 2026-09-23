@@ -5,11 +5,19 @@ export function Skills() {
   const { skills } = resumeData
 
   return (
-    <SectionWrapper id="skills" title="技能">
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+    <SectionWrapper
+      id="skills"
+      title="技术与交付保障"
+      subtitle="用成熟技术栈开发，交付即上线，源码和售后都到位。"
+      muted
+    >
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {skills.map((group) => (
-          <div key={group.category}>
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <div
+            key={group.category}
+            className="rounded-xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900"
+          >
+            <h3 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
               {group.category}
             </h3>
             <div className="flex flex-wrap gap-2">

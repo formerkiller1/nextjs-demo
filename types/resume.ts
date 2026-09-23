@@ -51,6 +51,41 @@ export interface Profile {
   bio: string[]
 }
 
+// 服务套餐（price 为「起步价」文案；comingSoon 用于成品站占位）
+export interface ServicePackage {
+  name: string
+  price: string
+  tagline: string
+  features: string[]
+  featured?: boolean
+  comingSoon?: boolean
+}
+
+// 加购项
+export interface AddOn {
+  name: string
+  price: string
+}
+
+// 交付流程步骤
+export interface ProcessStep {
+  title: string
+  desc: string
+}
+
+// 客户评价（暂无真实评价时留空数组，对应板块自动隐藏）
+export interface Testimonial {
+  content: string
+  author: string
+  meta?: string
+}
+
+// 常见问题
+export interface FAQItem {
+  q: string
+  a: string
+}
+
 // 整站数据
 export interface ResumeData {
   profile: Profile
@@ -58,4 +93,10 @@ export interface ResumeData {
   skills: SkillGroup[]
   experiences: Experience[]
   projects: Project[]
+  services: ServicePackage[]
+  readyMades: ServicePackage[]
+  addOns: AddOn[]
+  process: ProcessStep[]
+  testimonials: Testimonial[]
+  faqs: FAQItem[]
 }

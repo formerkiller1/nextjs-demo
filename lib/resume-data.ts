@@ -1,85 +1,141 @@
 import type { ResumeData } from "@/types/resume"
 
-// ⚠️ 占位内容：后续只需修改本文件即可更新整站展示，无需改动组件。
+// 全站展示内容集中在本文件维护，修改后无需改动组件。
 export const resumeData: ResumeData = {
   profile: {
-    name: "你的名字",
-    title: "全栈工程师 / Full-Stack Engineer",
-    tagline: "用代码把想法快速变成产品。",
-    location: "北京, 中国",
-    email: "your@email.com",
+    name: "啄木鸟编程",
+    title: "网站定制开发 · 大厂程序员亲自交付",
+    tagline: "大厂程序员，5 年编程经验，帮你把想法做成能上线的网站。",
+    location: "浙江 · 温州（全国远程接单）",
+    email: "2273997883@qq.com",
     bio: [
-      "这里写一段自我介绍：你是谁、擅长什么、正在专注做什么。",
-      "第二段可以补充你的技术偏好、职业目标，或者对某个领域的热情。",
+      "你好，我是「啄木鸟编程」，一名大厂在职程序员，5 年编程经验。",
+      "专注帮个人和小商家做网站：企业官网、个人主页 / 作品集、活动落地页、小程序，从设计到部署上线全流程交付，代码和可用性我亲自把关，不外包、不跑路。",
     ],
   },
 
-  socials: [
-    { platform: "github", label: "GitHub", url: "https://github.com/yourname" },
-    { platform: "email", label: "Email", url: "mailto:your@email.com" },
-    { platform: "juejin", label: "掘金", url: "https://juejin.cn/user/yourid" },
-    { platform: "xiaohongshu", label: "小红书", url: "https://www.xiaohongshu.com/user/profile/yourid" },
-  ],
+  // 暂时通过微信联系（见「联系我」二维码），其余账号待补充真实链接后再开启
+  socials: [],
 
   skills: [
     {
-      category: "前端",
-      items: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Vue"],
+      category: "技术栈",
+      items: ["React", "Next.js", "TypeScript", "Tailwind CSS", "Node.js"],
     },
     {
-      category: "后端",
-      items: ["Node.js", "Prisma", "PostgreSQL", "Go", "REST / GraphQL"],
-    },
-    {
-      category: "工程化 & 其他",
-      items: ["Git", "Docker", "CI/CD", "Vercel", "AI 提效工具"],
+      category: "交付保障",
+      items: ["域名部署上线", "响应式适配", "基础 SEO", "源码交付", "售后维护"],
     },
   ],
 
   experiences: [
     {
-      company: "某某公司",
-      role: "前端工程师",
-      period: "2024.07 - 至今",
-      location: "北京",
+      company: "大厂在职程序员",
+      role: "全栈开发 · 5 年编程经验",
+      period: "至今",
       highlights: [
-        "负责核心业务模块的前端架构设计与落地。",
-        "推动工程化改造，构建效率提升 XX%。",
-        "从 0 到 1 主导某功能上线，服务 XX 万用户。",
-      ],
-    },
-    {
-      company: "某某实习 / 项目",
-      role: "全栈开发",
-      period: "2023.06 - 2024.06",
-      location: "远程",
-      highlights: [
-        "独立完成产品从设计到部署的全流程。",
-        "使用 Next.js + Prisma 搭建全栈应用。",
+        "5 年一线开发经验，熟悉从前端到部署上线的完整链路。",
+        "结合 AI 工具提效，交付快、质量稳、价格实在。",
+        "承接个人与小商家建站需求，亲自开发与售后。",
       ],
     },
   ],
 
   projects: [
     {
-      name: "个人履历网站",
-      description: "基于 Next.js 16 + Tailwind CSS 的个人履历站点，支持多页面与暗色主题。",
+      name: "啄木鸟编程 · 官网（本站）",
+      description:
+        "你正在浏览的这个网站就是我做的：Next.js + Tailwind CSS，响应式布局 + 暗色主题，已部署上线。",
       tags: ["Next.js", "TypeScript", "Tailwind"],
-      url: "https://github.com/yourname/portfolio",
+      url: "",
+      featured: true,
+    },
+    // 更多真实案例 demo 陆续补齐
+  ],
+
+  // 纯定制建站报价，价格为「起步价」，具体按需求浮动。后续可另加低价成品站。
+  services: [
+    {
+      name: "单页站",
+      price: "¥500 起",
+      tagline: "个人主页 · 作品集 · 活动/产品落地页 · 电子名片",
+      features: ["1 个精美单页", "响应式适配", "部署上线"],
+    },
+    {
+      name: "企业官网",
+      price: "¥1500 起",
+      tagline: "门店 / 小企业官网，多页面展示",
+      features: ["3-6 个页面", "表单 / 留言", "响应式 + 基础 SEO", "部署上线"],
       featured: true,
     },
     {
-      name: "项目二",
-      description: "一句话描述这个项目解决了什么问题、你在其中做了什么。",
-      tags: ["React", "Node.js"],
-      url: "https://github.com/yourname/project-two",
-      featured: true,
+      name: "带后台 / 小程序",
+      price: "¥4000 起",
+      tagline: "需要内容管理、数据收集或简单业务系统",
+      features: ["前台 + 后台管理", "数据库", "小程序可选", "部署上线"],
+    },
+  ],
+
+  // 成品站：现成模板改内容即用，价格远低于定制，用于承接低预算客户（即将上线）。
+  readyMades: [
+    {
+      name: "成品单页",
+      price: "¥99 起",
+      tagline: "精选模板，换文案图片即可上线",
+      features: ["现成精美模板", "内容替换", "响应式 + 上线"],
+      comingSoon: true,
     },
     {
-      name: "项目三",
-      description: "一句话描述这个项目的亮点与技术栈。",
-      tags: ["Go", "Docker"],
-      url: "https://github.com/yourname/project-three",
+      name: "成品官网",
+      price: "¥499 起",
+      tagline: "多页面成品官网，快速上线",
+      features: ["现成官网模板", "多页面内容替换", "部署上线"],
+      comingSoon: true,
+    },
+  ],
+
+  // 加购项：单独计价，用于提升客单与复购。
+  addOns: [
+    { name: "域名 / 服务器 代购代配", price: "+¥200 起" },
+    { name: "网站备案协助", price: "可代办" },
+    { name: "加急交付（24-48h）", price: "+30%" },
+    { name: "额外页面", price: "+¥200 起/页" },
+    { name: "后续维护 / 更新", price: "¥500 起/年" },
+  ],
+
+  process: [
+    { title: "需求沟通", desc: "说清你想要什么效果，我免费出方案和报价。" },
+    { title: "支付定金", desc: "确认方案后付 30% 定金，我排期开工。" },
+    { title: "设计开发", desc: "AI 提效 + 亲自把关，快速做出可预览的版本。" },
+    { title: "预览验收", desc: "你在预览环境确认满意后结清尾款。" },
+    { title: "上线交付", desc: "部署到你的域名并交付源码，网站正式可用。" },
+    { title: "售后维护", desc: "交付后 7-15 天内免费修 Bug，长期可维护。" },
+  ],
+
+  // 暂无真实客户评价，留空即可，对应板块会自动隐藏；有真实好评后按此结构补充。
+  testimonials: [],
+
+  faqs: [
+    {
+      q: "做一个网站大概需要多久？",
+      a: "单页 2-3 天，企业官网 4-7 天，带后台 / 小程序 7-15 天。确认需求后我会给你明确的交付时间。",
+    },
+    {
+      q: "怎么付款？会不会做一半跑路？",
+      a: "先付 30% 定金我排期开工，做好后你在预览环境验收，满意再付尾款；尾款结清交付源码并部署上线，双方都有保障。",
+    },
+    {
+      q: "网站做好后我能自己改内容吗？",
+      a: "可以。交付时会给你源码和简单的使用说明；如果不想自己动手，也可以按维护费让我长期代维护。",
+    },
+    {
+      q: "域名和服务器怎么解决？",
+      a: "可以指导你自己购买配置，也可以由我代购代配（费用另计）。国内服务器需要备案，我会提前告知周期。",
+    },
+    {
+      q: "只有你一个人做，靠谱吗？",
+      a: "我是大厂在职程序员，5 年经验，亲自开发和交付，不外包、不转手，进度和源码全程透明，交付后还有售后。",
     },
   ],
 }
+

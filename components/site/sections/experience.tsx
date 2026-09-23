@@ -5,7 +5,7 @@ export function Experience() {
   const { experiences } = resumeData
 
   return (
-    <SectionWrapper id="experience" title="经历">
+    <SectionWrapper id="experience" title="经历" muted>
       <div className="space-y-8">
         {experiences.map((exp, i) => (
           <div

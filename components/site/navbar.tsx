@@ -7,10 +7,10 @@ import { cn } from "@/lib/utils"
 import { resumeData } from "@/lib/resume-data"
 
 const navLinks = [
-  { label: "关于", href: "/#about" },
-  { label: "技能", href: "/#skills" },
-  { label: "经历", href: "/#experience" },
-  { label: "项目", href: "/projects" },
+  { label: "案例", href: "/#projects" },
+  { label: "服务报价", href: "/#services" },
+  { label: "流程", href: "/#process" },
+  { label: "常见问题", href: "/#faq" },
   { label: "联系", href: "/#contact" },
 ]
 
